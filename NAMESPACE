@@ -8,3 +8,4 @@ importFrom("grDevices", "dev.off", "pdf")
 importFrom("graphics", "abline", "axis", "image", "layout", "par", "plot",
            "points", "text", "title")
 importFrom("stats", "dnorm", "rmultinom", "runif")
+importFrom("utils", "write.table")

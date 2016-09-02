@@ -2,15 +2,21 @@
 ### Encoding: UTF-8
 
 ###################################################
-### code chunk number 1: Installation (eval = FALSE)
+### code chunk number 1: Installation1 (eval = FALSE)
 ###################################################
-## install.packages('ape')
-## install.packages('fields')
-## install.packages('Canopy_0.99.0.tar.gz', repos = NULL, type="source")
+## install.packages('Canopy')
 
 
 ###################################################
-### code chunk number 2: Input
+### code chunk number 2: Installation2 (eval = FALSE)
+###################################################
+## install.packages("devtools")
+## library(devtools)
+## install_github("yuchaojiang/Canopy/package")
+
+
+###################################################
+### code chunk number 3: Input
 ###################################################
 library(Canopy)
 data("MDA231")
@@ -23,13 +29,32 @@ Wm = MDA231$Wm; Wm ## observed minor copy number (for CNA regions)
 epsilonM = MDA231$epsilonM ## standard deviation of WM, pre-fixed here
 epsilonm = MDA231$epsilonm ## standard deviation of Wm, pre-fixed here
 ## Matrix C specifices whether CNA regions harbor specific CNAs 
-## only needed if overlapping CNAs are observed
+## only needed if overlapping CNAs are observed, specifying which CNAs overlap
 C = MDA231$C; C
 Y = MDA231$Y; Y ## whether SNAs are affected by CNAs
 
 
 ###################################################
-### code chunk number 3: Sampling1 (eval = FALSE)
+### code chunk number 4: Tree_elements1
+###################################################
+data('MDA231_tree')
+MDA231_tree$Z # Z matrix specifies the position of the SNAs along the tree branch
+MDA231_tree$cna.copy # major and minor copy number (interger values) for each CNA
+MDA231_tree$CM # Major copy per clone for each CNA
+MDA231_tree$Cm # Minor copy per clone for each CNA
+MDA231_tree$Q # whether an SNA precedes a CNA
+
+
+###################################################
+### code chunk number 5: Tree_elements2
+###################################################
+MDA231_tree$H # if an SNA precedes a CNA, whether it resides in the major copy
+MDA231_tree$P # clonal compostion for each sample
+MDA231_tree$VAF # VAF based on current tree structure
+
+
+###################################################
+### code chunk number 6: Sampling1 (eval = FALSE)
 ###################################################
 ## K = 3:6 # number of subclones
 ## numchain = 20 # number of chains with random initiations
@@ -42,7 +67,7 @@ Y = MDA231$Y; Y ## whether SNAs are affected by CNAs
 
 
 ###################################################
-### code chunk number 4: Sampling2
+### code chunk number 7: Sampling2
 ###################################################
 data("MDA231_sampchain")
 sampchain = MDA231_sampchain
@@ -52,7 +77,7 @@ sampchaink = MDA231_sampchain[[which(K==k)]]
 
 
 ###################################################
-### code chunk number 5: Sampling3
+### code chunk number 8: Sampling3
 ###################################################
 length(sampchain) ## number of subtree spaces (K=3:6)
 length(sampchain[[which(K==4)]]) ## number of chains for subtree space with 4 subclones
@@ -60,7 +85,7 @@ length(sampchain[[which(K==4)]][[1]]) ## number of posterior trees in each chain
 
 
 ###################################################
-### code chunk number 6: BIC
+### code chunk number 9: BIC
 ###################################################
 burnin = 100
 thin = 10
@@ -70,8 +95,10 @@ optK = K[which.max(bic)]
 
 
 ###################################################
-### code chunk number 7: fig1
+### code chunk number 10: fig1
 ###################################################
+# Note: this segment is soley for generating BIC plot in the vignettes.
+# Use Canopy.BIC() with pdf = TRUE to generate this plot directly.
 par(mfrow=c(1,2))
 projectname = 'MDA231'
 numchain = 20
@@ -96,7 +123,7 @@ title('BIC for model selection')
 
 
 ###################################################
-### code chunk number 8: Post
+### code chunk number 11: Post
 ###################################################
 post = canopy.post(sampchain = sampchain, projectname = projectname, K = K,
                  numchain = numchain, burnin = burnin, thin = thin, optK = optK,
@@ -112,23 +139,30 @@ print(config.summary)
 
 
 ###################################################
-### code chunk number 9: Plot
+### code chunk number 12: Plot
 ###################################################
 config.i = config.summary[which.max(config.summary[,3]),1]
 cat('Configuration', config.i, 'has the highest posterior likelihood!\n')
+# plot the most likely tree in the posterior tree space
 output.tree = canopy.output(post, config.i, C)
-canopy.plottree(output.tree, pdf = FALSE)
+canopy.plottree(output.tree)
+
+# plot the tree with configuration 1 in the posterior tree space
+output.tree = canopy.output(post, 1, C)
+canopy.plottree(output.tree,pdf=TRUE,pdf.name = 
+                    paste(projectname,'_first_config.pdf',sep=''))
 
 
 ###################################################
-### code chunk number 10: fig2
+### code chunk number 13: fig2
 ###################################################
-canopy.plottree(output.tree, pdf = FALSE)
+canopy.plottree(output.tree)
 
 
 ###################################################
-### code chunk number 11: Try (eval = FALSE)
+### code chunk number 14: Try it your self (eval = FALSE)
 ###################################################
+## library(Canopy)
 ## data(toy)
 ## projectname = 'toy'
 ## R = toy$R; X = toy$X; WM = toy$WM; Wm = toy$Wm
@@ -143,14 +177,39 @@ canopy.plottree(output.tree, pdf = FALSE)
 
 
 ###################################################
-### code chunk number 12: fig3
+### code chunk number 15: fig3
 ###################################################
 data(toy)
-canopy.plottree(toy$besttree, pdf = FALSE)
+canopy.plottree(toy$besttree, txt = FALSE, pdf = FALSE)
 
 
 ###################################################
-### code chunk number 13: sessionInfo
+### code chunk number 16: Try it your self2 (eval = FALSE)
+###################################################
+## library(Canopy)
+## data(toy2)
+## projectname = 'toy2'
+## R = toy2$R; X = toy2$X; WM = toy2$WM; Wm = toy2$Wm
+## epsilonM = toy2$epsilonM; epsilonm = toy2$epsilonm; Y = toy2$Y
+## true.tree = toy2$true.tree
+## 
+## K = 3:6; numchain = 10
+## sampchain = canopy.sample(R = R, X = X, WM = WM, Wm = Wm, epsilonM = epsilonM, 
+##                           epsilonm = epsilonm, C = NULL, Y = Y, K = K, 
+##                           numchain = numchain, simrun = 50000, writeskip = 200,
+##                           projectname = projectname, cell.line = FALSE,
+##                           plot.likelihood = TRUE)
+
+
+###################################################
+### code chunk number 17: fig4
+###################################################
+data(toy2)
+canopy.plottree(toy2$true.tree, txt = FALSE, pdf = FALSE)
+
+
+###################################################
+### code chunk number 18: sessionInfo
 ###################################################
 toLatex(sessionInfo())
 
