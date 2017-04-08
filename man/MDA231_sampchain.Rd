@@ -16,6 +16,6 @@ List of sampled trees from different subtree space
 Yuchao Jiang \email{yuchaoj@wharton.upenn.edu}
 }
 \examples{
-# data(MDA231_sampchain)
+data(MDA231_sampchain)
 }
 \keyword{datasets}
